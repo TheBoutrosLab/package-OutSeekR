@@ -16,12 +16,12 @@ Description: An approach to outlier detection in RNA-seq and related data
 Depends: 
     R (>= 3.5)
 Imports:
-    future,
     future.apply,
     lsa,
     mclust,
     truncnorm
 Suggests: 
+    future,
     knitr,
     rmarkdown
 Config/testthat/edition: 3
