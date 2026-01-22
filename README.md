@@ -26,9 +26,9 @@ The statistical approach of **OutSeekR** centers around the use of five statisti
 
 - 1\. the range of standard scores (z-scores) computed using the mean and standard deviation;
 - 2\. the range of z-scores computed using the median and median absolute deviation (MAD);
-- 3\. the range of z-scores computed using the 5%-trimmed mean and 5%-trimmed standard deviation;
+- 3\. the range of z-scores computed using the 1%-trimmed mean and 1%-trimmed standard deviation;
 - 4\. the fraction of observations assigned to the smaller cluster based on K-means clustering with K = 2 clusters; and
-- 5\. the cosine similarity between the most extreme observed value and the largest quantile of a representative theoretical distribution (see [Simulating null data]).
+- 5\. the cosine similarity between the most extreme observed value and the largest quantile of a Gaussian mixture model fitted to the data.
 
 Specifically, it uses the five statistics calculated on the observed data and compares the distributions of these statistics with counterparts calculated using simulated null data. Observed data yielding statistics more extreme than those of the null data suggest the presence of outliers.
 
@@ -72,7 +72,6 @@ The output of the main function in **OutSeekR**, `detect.outliers()`, is a named
 - `fdr`: a matrix of FDR-adjusted p-values for the outlier test run on each transcript in the observed data.
 - `num.outliers`: a vector giving the number of outliers detected for each transcript based on the threshold.
 - `outlier.test.results.list`: a list of length `max(num.outliers) + 1` containing entries `roundN`, where `N` is between one and `max(num.outliers) + 1`.  `roundN` is the data frame of results for the outlier test after excluding the $(N-1)$th outlier sample, with `round1` being for the original data set (i.e., before excluding any outlier samples).
-- `distributions`: a numeric vector indicating the optimal distribution for each transcript. Possible values are 1 (normal), 2 (log-normal), 3 (exponential), and 4 (gamma).
 - `initial.screen.method`: Specifies the statistical criterion for initial feature selection. Valid options are 'p-value' and 'FDR'.
 
 ---
@@ -168,15 +167,6 @@ rownames(outlier.test.results.combined) <- NULL;
 head(outlier.test.results.combined);
 ```
 
-We can observe the optimal theoretical distribution for each transcript and the frequencies across all transcripts.
-
-```{r distributions}
-head(outlier.test.run.1$distributions);
-table(outlier.test.run.1$distributions);
-```
-
-The results are numeric codes, with 1 corresponding to the normal distribution, 2 the log-normal distribution, 3 the exponential distribution, and 4 the gamma distribution.
-
 Lastly, we show a second run of the algorithm where we adjust the p-value and FDR thresholds:
 
 ```{r run-2}
@@ -216,7 +206,7 @@ table(outlier.test.run.2$num.outliers);
 
 ## License
 
-Author: Jee Yun Han(jyhan@mednet.ucla.edu), John M Sahrmann(jsahrmann@mednet.ucla.edu)
+Author: Jee Yun Han(jhan@sbpdiscovery.org), John M Sahrmann(jsahrma@gmail.com)
 
 This project is licensed under the GNU General Public License version 2. See the file LICENSE.md for the terms of the GNU GPL license.
 

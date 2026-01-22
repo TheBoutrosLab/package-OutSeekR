@@ -4,18 +4,16 @@
 \alias{outlier.detection.cosine}
 \title{Cosine similarity}
 \usage{
-outlier.detection.cosine(x, distribution)
+outlier.detection.cosine(x)
 }
 \arguments{
 \item{x}{A numeric vector.}
-
-\item{distribution}{A numeric code corresponding to the optimal distribution of \code{x} as returned by \code{identify.bic.optimal.data.distribution()}.}
 }
 \value{
 A number.
 }
 \description{
-Compute cosine similarity for detection of outliers.  Generate theoretical quantiles based on the optimal distribution of the data, and compute cosine similarity between a point made up of the largest observed quantile and the largest theoretical quantile and a point on the line y = x.
+Compute cosine similarity for detection of outliers.  Generate theoretical quantiles based on the Gaussian mixture model of the data, and compute cosine similarity between a point made up of the largest observed quantile and the largest theoretical quantile and a point on the line y = x.
 .
 }
 \examples{
@@ -27,7 +25,6 @@ x <- rgamma(
     scale = 2
     );
 outlier.detection.cosine(
-    x = x,
-    distribution = 4
+    x = x
     );
 }

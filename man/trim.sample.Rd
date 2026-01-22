@@ -4,7 +4,7 @@
 \alias{trim.sample}
 \title{Trim a vector of numbers}
 \usage{
-trim.sample(x, trim = 0.05)
+trim.sample(x, trim = 0.01)
 }
 \arguments{
 \item{x}{A numeric vector.}
@@ -23,6 +23,6 @@ If \code{length(x) <= 10}, the function returns \code{x[2:(length(x) - 1)]}.
 \examples{
 trim.sample(
     x = 1:20,
-    trim = 0.05
+    trim = 0.01
     );
 }

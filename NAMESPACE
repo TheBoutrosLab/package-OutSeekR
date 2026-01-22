@@ -3,8 +3,6 @@
 export(calculate.p.values)
 export(calculate.residuals)
 export(detect.outliers)
-export(identify.bic.optimal.data.distribution)
-export(identify.bic.optimal.residuals.distribution)
 export(kmeans.fraction)
 export(outlier.detection.cosine)
 export(quantify.outliers)
