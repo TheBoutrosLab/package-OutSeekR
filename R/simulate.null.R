@@ -36,7 +36,7 @@ simulate.null <- function(
     mix <- mclust::densityMclust(
         x.nozero.trim,
         G = 1:10,
-        modelNames = "V"
+        modelNames = 'V'
         );
     # Set sample size (same as original data)
     n.samples <- length(x);
@@ -56,7 +56,7 @@ simulate.null <- function(
     mix.noise <- mclust::densityMclust(
         r.nozero.trim,
         G = 1:10,
-        modelNames = "V"
+        modelNames = 'V'
         );
     # Sample noise from the fitted model
     simulated.noise <- mclust::simV(

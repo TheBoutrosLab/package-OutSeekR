@@ -44,7 +44,7 @@ calculate.residuals <- function(x) {
     mix <- mclust::densityMclust(
         x.trim,
         G = 1:10,
-        modelNames = "V"
+        modelNames = 'V'
         );
     props <- mix$parameters$pro;  # mixture proportions
     mu <- mix$parameters$mean;    # component means
@@ -58,7 +58,7 @@ calculate.residuals <- function(x) {
         return(result);
         }
     # Define quantile function
-    qmix <- function(p, props, mu, sig2, 
+    qmix <- function(p, props, mu, sig2,
         lower = min(mu) - 5 * max(sqrt(sig2)),
         upper = max(mu) + 5 * max(sqrt(sig2))) {
         sapply(p, function(pi) {

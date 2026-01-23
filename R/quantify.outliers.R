@@ -219,7 +219,7 @@ outlier.detection.cosine <- function(x) {
     mix <- mclust::densityMclust(
         x.trim,
         G = 1:10,
-        modelNames = "V"
+        modelNames = 'V'
         );
     # Extract GMM parameters
     props <- mix$parameters$pro;  # mixture proportions
@@ -234,7 +234,7 @@ outlier.detection.cosine <- function(x) {
         return(result);
         }
     # Define quantile function
-    qmix <- function(p, props, mu, sig2, 
+    qmix <- function(p, props, mu, sig2,
         lower = min(mu) - 5 * max(sqrt(sig2)),
         upper = max(mu) + 5 * max(sqrt(sig2))) {
         sapply(p, function(pi) {
