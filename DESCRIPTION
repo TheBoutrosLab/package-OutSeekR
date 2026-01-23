@@ -1,35 +1,33 @@
 Package: OutSeekR
 Type: Package
 Title: Statistical Approach to Outlier Detection in RNA-Seq and Related Data
-Version: 1.0.1
-Date: 2025-06-17
+Version: 1.1.0
+Date: 2026-01-15
 Authors@R: c(
-    person("Jee Yun", "Han", email = "jyhan@mednet.ucla.edu", role = "aut"),
-    person("John", "Sahrmann", email = "jsahrmann@mednet.ucla.edu", role = "aut"),
-    person("Jaron", "Arbet", email = "jarbet@mednet.ucla.edu", role = "ctb"),
-    person("Paul", "Boutros", email = "pboutros@mednet.ucla.edu", role = c("aut", "cre", "cph")),
-    person("Dan", "Knight", role = "ctb"))
+    person("Jee Yun", "Han", email = "jhan@sbpdiscovery.org", role = "aut"),
+    person("John", "Sahrmann", email = "jsahrma@gmail.com", role = "aut"),
+    person("Jaron", "Arbet", email = "jarbet@coh.org", role = "ctb"),
+    person("Paul", "Boutros", email = "pboutros@sbpdiscovery.org", role = c("aut", "cre", "cph"))
+    )
 Description: An approach to outlier detection in RNA-seq and related data
     based on five statistics. 'OutSeekR' implements an outlier test by comparing
     the distributions of these statistics in observed data with those of
     simulated null data.
 Depends: 
-    R (>= 2.10)
+    R (>= 3.5)
 Imports:
     future.apply,
-    gamlss,
-    gamlss.dist,
     lsa,
+    mclust,
     truncnorm
 Suggests: 
     future,
     knitr,
-    rmarkdown,
-    testthat (>= 3.0.0)
+    rmarkdown
 Config/testthat/edition: 3
 License: GPL-2
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 VignetteBuilder: knitr

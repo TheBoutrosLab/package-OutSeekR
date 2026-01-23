@@ -4,28 +4,18 @@
 \alias{simulate.null}
 \title{Simulate from a null distribution}
 \usage{
-\method{simulate}{null}(x, x.distribution, r, r.distribution)
+\method{simulate}{null}(x, r)
 }
 \arguments{
 \item{x}{A numeric vector of transcripts.}
 
-\item{x.distribution}{A numeric code corresponding to the optimal distribution of \code{x} as returned by \code{identify.bic.optimal.data.distribution()}.  Possible values are
-\itemize{
-\item 1 = normal,
-\item 2 = log-normal,
-\item 3 = exponential, and
-\item 4 = gamma.
-}}
-
 \item{r}{A numeric vector of residuals calculated for this transcript.}
-
-\item{r.distribution}{A numeric code corresponding to the optimal distribution of \code{x} as returned by \code{identify.bic.optimal.residuals.distribution()}.  Possible values are the same as those for \code{x.distribution}.}
 }
 \value{
 A numeric vector of the same length as \code{x}.  Names are not retained.
 }
 \description{
-Simulate transcripts from a specified null distribution.
+Simulate transcripts from a Gaussian mixture model fitted to the observed data.
 }
 \examples{
 # Prepare fake data.
@@ -36,23 +26,14 @@ x <- rgamma(
     scale = 2
     );
 names(x) <- paste('Sample', seq_along(x), sep = '.');
-x.dist <- identify.bic.optimal.data.distribution(
-    x = x
-    );
 r <- calculate.residuals(
-    x = x,
-    distribution = x.dist
+    x = x
     );
 r.trimmed <- trim.sample(
     x = r
     );
-r.dist <- identify.bic.optimal.residuals.distribution(
-    x = r.trimmed
-    );
 null <- simulate.null(
     x = x,
-    x.distribution = x.dist,
-    r = r.trimmed,
-    r.distribution = r.dist
+    r = r.trimmed
     );
 }

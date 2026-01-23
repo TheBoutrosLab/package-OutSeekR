@@ -145,34 +145,32 @@ quantify.outliers <- function(x, method = 'mean', trim = 0, nstart = 1, exclude.
         gene.order <- x.na[order(x.na, decreasing = TRUE)];
         if (exclude.zero) {
             gene.order.nonzero <- gene.order[0 != gene.order];
-            top.patient <- round(
-                x = length(gene.order.nonzero) * trim,
-                digits = 0
-                );
-            low.patient <- round(
-                x = length(gene.order.nonzero) * (1 - trim),
-                digits = 0
-                );
-            data.mean <- mean(
-                x = gene.order.nonzero,
-                trim = trim
-                );
-            data.sd <- stats::sd(gene.order.nonzero[(top.patient + 1):(low.patient)]);
+            if (trim == 0) {
+                data.mean <- mean(gene.order.nonzero);
+                data.sd <- stats::sd(gene.order.nonzero);
+                    }
+            else {
+                trim.sample.number <- length(gene.order.nonzero) * trim;
+                trim.sample.number.integer <- round(trim.sample.number);
+                trim.count <- max(1, trim.sample.number.integer);
+                trimmed.data <- gene.order.nonzero[(trim.count + 1):(length(gene.order.nonzero) - trim.count)];
+                data.mean <- mean(trimmed.data);
+                data.sd <- stats::sd(trimmed.data);
             }
+        }
         else {
-            top.patient <- round(
-                x = length(x.na) * trim,
-                digits = 0
-                );
-            low.patient <- round(
-                x = length(x.na) * (1 - trim),
-                digits = 0
-                );
-            data.mean <- mean(
-                x = gene.order,
-                trim = trim
-                );
-            data.sd <- stats::sd(gene.order[(top.patient + 1):(low.patient)]);
+            if (trim == 0) {
+                data.mean <- mean(gene.order);
+                data.sd <- stats::sd(gene.order);
+                }
+            else {
+                trim.sample.number <- length(x.na) * trim;
+                trim.sample.number.integer <- round(trim.sample.number);
+                trim.count <- max(1, trim.sample.number.integer);
+                trimmed.data <- gene.order[(trim.count + 1):(length(gene.order) - trim.count)];
+                data.mean <- mean(trimmed.data);
+                data.sd <- stats::sd(trimmed.data);
+                }
             }
         if (0 == data.sd || is.na(data.sd) || is.na(data.mean)) {
             return(rep(NA, length(x)));
@@ -185,10 +183,9 @@ quantify.outliers <- function(x, method = 'mean', trim = 0, nstart = 1, exclude.
 
 #' Cosine similarity
 #'
-#' Compute cosine similarity for detection of outliers.  Generate theoretical quantiles based on the optimal distribution of the data, and compute cosine similarity between a point made up of the largest observed quantile and the largest theoretical quantile and a point on the line y = x.
+#' Compute cosine similarity for detection of outliers.  Generate theoretical quantiles based on the Gaussian mixture model of the data, and compute cosine similarity between a point made up of the largest observed quantile and the largest theoretical quantile and a point on the line y = x.
 #' .
 #' @param x A numeric vector.
-#' @param distribution A numeric code corresponding to the optimal distribution of `x` as returned by `identify.bic.optimal.data.distribution()`.
 #'
 #' @return A number.
 #' @export
@@ -201,86 +198,54 @@ quantify.outliers <- function(x, method = 'mean', trim = 0, nstart = 1, exclude.
 #'     scale = 2
 #'     );
 #' outlier.detection.cosine(
-#'     x = x,
-#'     distribution = 4
+#'     x = x
 #'     );
-outlier.detection.cosine <- function(x, distribution) {
-    # Define a minimum value to ensure the values in `x` are strictly
-    # positive.
-    add.minimum.value <- least.significant.digit(
-        x = x
-        );
-    x.nozero <- x + add.minimum.value;
+outlier.detection.cosine <- function(x) {
+    # Apply 1% trimming to the data
     x.trim <- trim.sample(
         x = x,
-        trim = 0.05
+        trim = 0.01
         );
-    x.nozero.trim <- x.trim + add.minimum.value;
-
     # Generate the percentiles at which theoretical quantiles will be
     # computed for the optimal distribution of the data.
     p <- stats::ppoints(
-        n = x.nozero
+        n = x
         );
-    # Generate quantiles.
-    if (1 == distribution) {
-        norm.mean <- mean(x.nozero.trim);
-        norm.sd <- stats::sd(x.nozero.trim);
-        # For a normal distribution, generate quantiles from a
-        # truncated normal distribution.
-        theoretical.quantiles <- truncnorm::qtruncnorm(
-            p = p,
-            a = 0,
-            b = Inf,
-            mean = norm.mean,
-            sd = norm.sd
-            );
-        observed.quantiles <- stats::quantile(
-            x = x.nozero,
-            probs = p
+    observed.quantiles <- stats::quantile(
+        x = x,
+        probs = p
+        );
+    # Fit Gaussian mixture model to trimmed data
+    mix <- mclust::densityMclust(
+        x.trim,
+        G = 1:10,
+        modelNames = 'V'
+        );
+    # Extract GMM parameters
+    props <- mix$parameters$pro;  # mixture proportions
+    mu <- mix$parameters$mean;    # component means
+    sig2 <- mix$parameters$variance$sigmasq;  # component variances
+    # Define mixture CDF
+    pmix <- function(x, props, mu, sig2) {
+        result <- 0;
+        for (i in 1:length(props)) {
+            result <- result + props[i] * stats::pnorm(x, mean = mu[i], sd = sqrt(sig2[i]));
+            }
+        return(result);
+        }
+    # Define quantile function
+    qmix <- function(p, props, mu, sig2,
+        lower = min(mu) - 5 * max(sqrt(sig2)),
+        upper = max(mu) + 5 * max(sqrt(sig2))) {
+        sapply(p, function(pi) {
+            stats::uniroot(function(x) pmix(x, props, mu, sig2) - pi,
+                lower = lower, upper = upper)$root;
+                }
             );
         }
-    else if (2 == distribution) {
-        mean.log <- mean(x.nozero.trim);
-        sd.log <- stats::sd(x.nozero.trim);
-        m2 <-  log(mean.log^2 / sqrt(sd.log^2 + mean.log^2));
-        sd2 <- sqrt(log(1 + (sd.log^2 / mean.log^2)));
-        theoretical.quantiles <- stats::qlnorm(
-            p = p,
-            meanlog = m2,
-            sdlog = sd2
-            );
-        observed.quantiles <- stats::quantile(
-            x = x.nozero,
-            probs = p
-            );
-        }
-    else if (3 == distribution) {
-        exp.rate <- 1 / mean(x.nozero.trim);
-        theoretical.quantiles <- stats::qexp(
-            p = p,
-            rate = exp.rate
-            );
-        observed.quantiles <- stats::quantile(
-            x = x.nozero,
-            probs = p
-            );
-        }
-    else if (4 == distribution) {
-        mean.gamma <- mean(x.nozero.trim);
-        sd.gamma <- stats::sd(x.nozero.trim);
-        gamma.shape <- (mean.gamma / sd.gamma)^2;
-        gamma.rate <- mean.gamma / (sd.gamma^2);
-        theoretical.quantiles <- stats::qgamma(
-            p = p,
-            shape = gamma.shape,
-            rate = gamma.rate
-            );
-        observed.quantiles <- stats::quantile(
-            x = x.nozero,
-            probs = p
-            );
-        }
+    # Calculate theoretical quantiles
+    theoretical.quantiles <- qmix(p, props, mu, sig2);
+    # Calculate the cosine similarity
     cosine.similarity <- lsa::cosine(
         x = c(theoretical.quantiles[length(p)], observed.quantiles[length(p)]),
         y = c(1, 1)

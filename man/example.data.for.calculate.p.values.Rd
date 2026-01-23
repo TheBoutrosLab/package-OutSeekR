@@ -5,7 +5,7 @@
 \alias{example.data.for.calculate.p.values}
 \title{example.data.for.calculate.p.values}
 \format{
-An object of class \code{list} of length 13.
+An object of class \code{list} of length 12.
 }
 \usage{
 example.data.for.calculate.p.values

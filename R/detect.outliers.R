@@ -14,7 +14,6 @@
 #' * `p.values`: a matrix of unadjusted p-values for the outlier test run on each transcript in `data`.
 #' * `num.outliers`: a vector giving the number of outliers detected for each transcript based on the threshold.
 #' * `outlier.test.results.list`: a list of length `max(num.outliers) + 1` containing entries `roundN`, where `N` is between one and `max(num.outliers) + 1`.  `roundN` is the data frame of results for the outlier test after excluding the (N-1)th outlier sample, with `round1` being for the original data set (i.e., before excluding any outlier samples).
-#' * `distributions`: a numeric vector indicating the optimal distribution for each transcript.  Possible values are 1 (normal), 2 (log-normal), 3 (exponential), and 4 (gamma).
 #' * `initial.screen.method`: Specifies the statistical criterion for initial feature selection. Valid options are 'FDR' and 'p-value' (FDR used by default).
 #' @export
 #' @examples
@@ -41,25 +40,14 @@ detect.outliers <- function(
         }
     # Match the initial screening method
     initial.screen.method <- match.arg(initial.screen.method);
-
-    # Determine which of the normal, log-normal, exponential, or gamma
-    # distributions provides the best fit to each row of values in
-    # `data`.
-    optimal.distribution.data <- future.apply::future_apply(
-        X = data,
-        MARGIN = 1,
-        FUN = identify.bic.optimal.data.distribution,
-        future.seed = TRUE
-        );
-    # Calculate residuals of the observed data with respect to the
-    # optimal distribution.  (We use `as.numeric()` on the input to
-    # `calculate.residuals()` in order to handle data frame input.
+    # Calculate residuals using Gaussian mixture model
+    # (We use `as.numeric()` on the input to `calculate.residuals()`
+    # in order to handle data frame input.
     observed.residuals <- future.apply::future_lapply(
         X = seq_len(nrow(data)),
         FUN = function(i) {
             calculate.residuals(
-                x = as.numeric(data[i, ]),
-                distribution = optimal.distribution.data[i]
+                x = as.numeric(data[i, ])
                 );
             }
         );
@@ -68,20 +56,6 @@ detect.outliers <- function(
         args = observed.residuals
         );
     rownames(observed.residuals) <- rownames(data);
-    # Apply 5% trimming to each row of residuals.
-    observed.residuals <- future.apply::future_apply(
-        X = observed.residuals,
-        MARGIN = 1,
-        FUN = trim.sample
-        );
-    observed.residuals <- t(observed.residuals);
-    # Determine which of the normal, log-normal, exponential, or gamma
-    # distributions provides the best fit to each row of residuals.
-    optimal.distribution.residuals <- future.apply::future_apply(
-        X = observed.residuals,
-        MARGIN = 1,
-        FUN = identify.bic.optimal.residuals.distribution
-        );
     data.zrange.mean <- future.apply::future_apply(
         X = data,
         MARGIN = 1,
@@ -99,7 +73,7 @@ detect.outliers <- function(
         MARGIN = 1,
         FUN = quantify.outliers,
         method = 'mean',
-        trim = 0.05
+        trim = 0.01
         );
     data.fraction.kmeans <- future.apply::future_apply(
         X = data,
@@ -136,13 +110,12 @@ detect.outliers <- function(
         X = seq_len(nrow(data)),
         FUN = function(i) {
             outlier.detection.cosine(
-                x = as.numeric(data[i, ]),
-                distribution = optimal.distribution.data[i]
+                x = as.numeric(data[i, ])
                 );
             }
         );
     # Generate a matrix of null transcripts by simulating from their
-    # respective optimal distributions.
+    # fitted Gausian Mixture Model.
     sampled.indices <- sample(
         x = nrow(data),
         size = num.null,
@@ -153,14 +126,8 @@ detect.outliers <- function(
         FUN = function(i) {
             null.row <- simulate.null(
                 x = as.numeric(data[i, ]),
-                x.distribution = optimal.distribution.data[i],
-                r = as.numeric(observed.residuals[i, ]),
-                r.distribution = optimal.distribution.residuals[i]
+                r = as.numeric(observed.residuals[i, ])
                 );
-            # Determine which of the normal, log-normal, exponential, or gamma
-            # distributions provides the best fit to each row of values in
-            # `null.data`.
-            optimal.distribution.null.data <- identify.bic.optimal.data.distribution(null.row);
             zrange.mean <- zrange(
                 quantify.outliers(
                     null.row,
@@ -177,7 +144,7 @@ detect.outliers <- function(
                 quantify.outliers(
                     null.row,
                     method = 'mean',
-                    trim = 0.05
+                    trim = 0.01
                     )
                 );
             fraction.kmeans <- kmeans.fraction(
@@ -188,8 +155,7 @@ detect.outliers <- function(
                     )
                 );
             cosine.similarity <- outlier.detection.cosine(
-                x = as.numeric(null.row),
-                distribution = optimal.distribution.null.data
+                x = as.numeric(null.row)
                 );
             list(
                 zrange.mean = zrange.mean,
@@ -245,7 +211,6 @@ detect.outliers <- function(
     # browser();
     # example.data.for.calculate.p.values <- list(
     #     data = data,
-    #     x.distribution = optimal.distribution.data,
     #     x.zrange.mean = data.zrange.mean,
     #     x.zrange.median = data.zrange.median,
     #     x.zrange.trimmean = data.zrange.trimmean,
@@ -266,7 +231,6 @@ detect.outliers <- function(
             names(x) <- colnames(data);
             calculate.p.values(
                 x = x,
-                x.distribution = optimal.distribution.data[i],
                 x.zrange.mean = data.zrange.mean[i],
                 x.zrange.median = data.zrange.median[i],
                 x.zrange.trimmean = data.zrange.trimmean[i],
@@ -302,7 +266,6 @@ detect.outliers <- function(
     perform.outlier.detection <- function(
         k,
         data,
-        optimal.distribution.data,
         null.zrange.mean,
         null.zrange.median,
         null.zrange.trimmean,
@@ -334,7 +297,7 @@ detect.outliers <- function(
                     quantify.outliers(
                         x = x,
                         method = 'mean',
-                        trim = 0.05
+                        trim = 0.01
                         )
                     );
                 x.fraction.kmeans <- kmeans.fraction(
@@ -345,12 +308,10 @@ detect.outliers <- function(
                         )
                     );
                 x.cosine.similarity <- outlier.detection.cosine(
-                    x = x,
-                    distribution = optimal.distribution.data[i]
+                    x = x
                     );
                 calculate.p.values(
                     x = x,
-                    x.distribution = optimal.distribution.data[i],
                     x.zrange.mean = x.zrange.mean,
                     x.zrange.median = x.zrange.median,
                     x.zrange.trimmean = x.zrange.trimmean,
@@ -375,7 +336,6 @@ detect.outliers <- function(
             outlier.test.results.list[[next.name]] <- perform.outlier.detection(
                 k,
                 data,
-                optimal.distribution.data,
                 null.zrange.mean,
                 null.zrange.median,
                 null.zrange.trimmean,
@@ -396,7 +356,6 @@ detect.outliers <- function(
             outlier.test.results.list[[next.name]] <- perform.outlier.detection(
                 k,
                 data,
-                optimal.distribution.data,
                 null.zrange.mean,
                 null.zrange.median,
                 null.zrange.trimmean,
@@ -470,7 +429,6 @@ detect.outliers <- function(
         fdr = fdr,
         num.outliers = num.outliers,
         outlier.test.results.list = outlier.test.results.list,
-        distributions = optimal.distribution.data,
         initial.screen.method = initial.screen.method
         );
     }

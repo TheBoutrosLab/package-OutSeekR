@@ -6,7 +6,6 @@
 \usage{
 calculate.p.values(
   x,
-  x.distribution,
   x.zrange.mean,
   x.zrange.median,
   x.zrange.trimmean,
@@ -22,8 +21,6 @@ calculate.p.values(
 }
 \arguments{
 \item{x}{A numeric vector of values for an observed transcript.}
-
-\item{x.distribution}{A numeric code corresponding to the optimal distribution of \code{x} as returned by \code{identify.bic.optimal.data.distribution()}.}
 
 \item{x.zrange.mean}{A number, the range of the z-scores calculated using the mean and standard deviation of \code{x}.}
 
@@ -62,7 +59,6 @@ data(example.data.for.calculate.p.values);
 i <- 1; # row index of transcript to test
 calculate.p.values(
    x = example.data.for.calculate.p.values$data[i,],
-   x.distribution = example.data.for.calculate.p.values$x.distribution[i],
    x.zrange.mean = example.data.for.calculate.p.values$x.zrange.mean[i],
    x.zrange.median = example.data.for.calculate.p.values$x.zrange.median[i],
    x.zrange.trimmean = example.data.for.calculate.p.values$x.zrange.trimmean[i],

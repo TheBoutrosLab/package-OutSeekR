@@ -4,24 +4,16 @@
 \alias{calculate.residuals}
 \title{Calculate residuals}
 \usage{
-calculate.residuals(x, distribution)
+calculate.residuals(x)
 }
 \arguments{
 \item{x}{A numeric vector.}
-
-\item{distribution}{A number corresponding to the optimal distribution of \code{x} as returned by, e.g., \code{identify.bic.optimal.data.distribution()}.  One of
-\itemize{
-\item 1 = normal,
-\item 2 = log-normal,
-\item 3 = exponential, and
-\item 4 = gamma.
-}}
 }
 \value{
 A numeric vector of the same length as \code{x}.  Names are not retained.
 }
 \description{
-Calculate residuals between quantiles of the input and quantiles of one of four distributions: normal, log-normal, exponential, or gamma.
+Calculate residuals between quantiles of the input and quantiles of a Gaussian mixture model fitted to the data.
 }
 \examples{
 # Generate fake data.
@@ -37,8 +29,7 @@ names(x) <- paste(
     sep = '.'
     );
 calculate.residuals(
-    x = x,
-    distribution = 4
+    x = x
     );
 
 }
