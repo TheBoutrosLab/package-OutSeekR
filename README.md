@@ -12,7 +12,7 @@
 
 ## Introduction
 
-![OutSeekR](https://github.com/user-attachments/assets/3569bdb4-f03a-4616-9e79-e577aa51c1d0)
+![OutSeekR](https://github.com/user-attachments/assets/81e7030b-8d0d-4dc2-9536-9551f104ae0f)
 
 The **OutSeekR** package implements a statistical approach to detecting outliers in RNA-seq and related data.
 
